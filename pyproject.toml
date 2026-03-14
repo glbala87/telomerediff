@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "telomerediff"
+version = "0.2.1"
+description = "De novo discovery of telomeric repeat blocks from long-read sequencing (ONT / PacBio)"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+  {name = "Bala Subramani Gattu Linga"}
+]
+keywords = ["telomere", "long-read", "ONT", "PacBio", "genomics", "bioinformatics"]
+
+dependencies = []
+
+[project.optional-dependencies]
+progress = ["tqdm>=4.60"]
+plots = ["matplotlib>=3.5"]
+bam = ["pysam>=0.19"]
+all = ["tqdm>=4.60", "matplotlib>=3.5", "pysam>=0.19"]
+dev = ["pytest>=7.0", "tqdm>=4.60", "matplotlib>=3.5"]
+
+[project.scripts]
+telomerediff = "telomerediff.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

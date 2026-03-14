@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use telomerediff in your research, please cite it."
+title: "telomerediff: Alignment-free de novo discovery of telomeric repeats from long-read sequencing"
+authors:
+  - family-names: "Gattu Linga"
+    given-names: "Bala Subramani"
+version: "0.1.0"
+license: MIT
+repository-code: "https://github.com/glbala87/telomerediff"
+keywords:
+  - telomeres
+  - long-read sequencing
+  - Oxford Nanopore
+  - PacBio
+  - bioinformatics
+  - alignment-free
