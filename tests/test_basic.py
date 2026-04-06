@@ -1,4 +1,4 @@
-"""Comprehensive tests for telomerediff."""
+"""Comprehensive tests for teloscan."""
 
 import os
 import tempfile
@@ -14,12 +14,12 @@ SAMPLE_FASTQ = os.path.join(TESTS_DIR, "data", "sample.fastq")
 # ========================
 
 def test_import():
-    import telomerediff
-    assert telomerediff is not None
+    import teloscan
+    assert teloscan is not None
 
 
 def test_version():
-    from telomerediff import __version__
+    from teloscan import __version__
     assert __version__
 
 
@@ -29,46 +29,46 @@ def test_version():
 
 class TestParseK:
     def test_single_int(self):
-        from telomerediff.repeats import parse_k
+        from teloscan.repeats import parse_k
         assert parse_k(6) == [6]
 
     def test_single_string(self):
-        from telomerediff.repeats import parse_k
+        from teloscan.repeats import parse_k
         assert parse_k("6") == [6]
 
     def test_range(self):
-        from telomerediff.repeats import parse_k
+        from teloscan.repeats import parse_k
         assert parse_k("4-8") == [4, 5, 6, 7, 8]
 
     def test_comma_separated(self):
-        from telomerediff.repeats import parse_k
+        from teloscan.repeats import parse_k
         assert parse_k("5,6,7") == [5, 6, 7]
 
     def test_mixed(self):
-        from telomerediff.repeats import parse_k
+        from teloscan.repeats import parse_k
         result = parse_k("4-6,8,10-12")
         assert result == [4, 5, 6, 8, 10, 11, 12]
 
     def test_list_input(self):
-        from telomerediff.repeats import parse_k
+        from teloscan.repeats import parse_k
         assert parse_k([5, 3, 7]) == [3, 5, 7]
 
     def test_deduplication(self):
-        from telomerediff.repeats import parse_k
+        from teloscan.repeats import parse_k
         assert parse_k("4-6,5-7") == [4, 5, 6, 7]
 
     def test_invalid_empty(self):
-        from telomerediff.repeats import parse_k
+        from teloscan.repeats import parse_k
         with pytest.raises(ValueError):
             parse_k("")
 
     def test_invalid_range(self):
-        from telomerediff.repeats import parse_k
+        from teloscan.repeats import parse_k
         with pytest.raises(ValueError):
             parse_k("8-4")
 
     def test_invalid_non_integer(self):
-        from telomerediff.repeats import parse_k
+        from teloscan.repeats import parse_k
         with pytest.raises(ValueError):
             parse_k("abc")
 
@@ -79,14 +79,14 @@ class TestParseK:
 
 class TestIO:
     def test_read_fastq(self):
-        from telomerediff.io import read_fasta_fastq
+        from teloscan.io import read_fasta_fastq
         records = list(read_fasta_fastq(SAMPLE_FASTQ))
         assert len(records) == 5
         assert records[0][0] == "read1_telomere_TTAGGG"
         assert "TTAGGG" in records[0][1]
 
     def test_read_fasta(self):
-        from telomerediff.io import read_fasta_fastq
+        from teloscan.io import read_fasta_fastq
         with tempfile.NamedTemporaryFile(mode="w", suffix=".fasta", delete=False) as f:
             f.write(">seq1\nACGTACGT\n>seq2\nTTTTAAAA\nCCCCGGGG\n")
             f.flush()
@@ -97,7 +97,7 @@ class TestIO:
         assert records[1] == ("seq2", "TTTTAAAACCCCGGGG")
 
     def test_read_gzip_fastq(self):
-        from telomerediff.io import read_fasta_fastq
+        from teloscan.io import read_fasta_fastq
         with tempfile.NamedTemporaryFile(suffix=".fastq.gz", delete=False) as f:
             with gzip.open(f.name, "wt") as gz:
                 gz.write("@r1\nACGT\n+\nIIII\n")
@@ -107,7 +107,7 @@ class TestIO:
         assert records[0] == ("r1", "ACGT")
 
     def test_read_gzip_fasta(self):
-        from telomerediff.io import read_fasta_fastq
+        from teloscan.io import read_fasta_fastq
         with tempfile.NamedTemporaryFile(suffix=".fa.gz", delete=False) as f:
             with gzip.open(f.name, "wt") as gz:
                 gz.write(">s1\nGATTACA\n")
@@ -117,7 +117,7 @@ class TestIO:
         assert records[0] == ("s1", "GATTACA")
 
     def test_quality_filter(self):
-        from telomerediff.io import read_fasta_fastq
+        from teloscan.io import read_fasta_fastq
         with tempfile.NamedTemporaryFile(mode="w", suffix=".fastq", delete=False) as f:
             # Quality '!' = 0, 'I' = 40
             f.write("@good\nACGT\n+\nIIII\n@bad\nACGT\n+\n!!!!\n")
@@ -128,17 +128,17 @@ class TestIO:
         assert records[0][0] == "good"
 
     def test_format_detection_fq(self):
-        from telomerediff.io import _detect_format
+        from teloscan.io import _detect_format
         assert _detect_format("reads.fq") == "fastq"
         assert _detect_format("reads.fastq.gz") == "fastq"
 
     def test_format_detection_fa(self):
-        from telomerediff.io import _detect_format
+        from teloscan.io import _detect_format
         assert _detect_format("genome.fa") == "fasta"
         assert _detect_format("genome.fasta.gz") == "fasta"
 
     def test_format_detection_bam(self):
-        from telomerediff.io import _detect_format
+        from teloscan.io import _detect_format
         assert _detect_format("aligned.bam") == "bam"
         assert _detect_format("aligned.cram") == "cram"
 
@@ -149,13 +149,13 @@ class TestIO:
 
 class TestDNAHelpers:
     def test_revcomp(self):
-        from telomerediff.engine import revcomp
+        from teloscan.engine import revcomp
         assert revcomp("ACGT") == "ACGT"
         assert revcomp("TTAGGG") == "CCCTAA"
         assert revcomp("A") == "T"
 
     def test_canonical_repeat_unit(self):
-        from telomerediff.engine import canonical_repeat_unit
+        from teloscan.engine import canonical_repeat_unit
         # TTAGGG and CCCTAA should canonicalize to the same thing
         c1 = canonical_repeat_unit("TTAGGG")
         c2 = canonical_repeat_unit("CCCTAA")
@@ -165,13 +165,13 @@ class TestDNAHelpers:
         assert c1 == c3
 
     def test_hamming(self):
-        from telomerediff.engine import hamming
+        from teloscan.engine import hamming
         assert hamming("ACGT", "ACGT") == 0
         assert hamming("ACGT", "ACGA") == 1
         assert hamming("AAAA", "TTTT") == 4
 
     def test_motif_entropy(self):
-        from telomerediff.engine import motif_entropy
+        from teloscan.engine import motif_entropy
         # Single base = 0 entropy
         assert motif_entropy("AAAA") == 0.0
         # All different bases = max entropy
@@ -179,7 +179,7 @@ class TestDNAHelpers:
         assert e == pytest.approx(2.0, abs=0.01)
 
     def test_repeat_confidence(self):
-        from telomerediff.engine import repeat_confidence
+        from teloscan.engine import repeat_confidence
         # More copies, higher entropy => higher confidence
         c1 = repeat_confidence(2, 6, "perfect", 1.5)
         c2 = repeat_confidence(20, 6, "perfect", 1.5)
@@ -190,7 +190,7 @@ class TestDNAHelpers:
         assert c3 > c4
 
     def test_determine_strand(self):
-        from telomerediff.engine import _determine_strand
+        from teloscan.engine import _determine_strand
         s1 = _determine_strand("TTAGGG")
         s2 = _determine_strand("CCCTAA")
         # They are rev comp of each other, so one should be + and the other -
@@ -203,7 +203,7 @@ class TestDNAHelpers:
 
 class TestDetection:
     def test_perfect_detection_ttaggg(self):
-        from telomerediff.engine import iter_kmer_runs_perfect
+        from teloscan.engine import iter_kmer_runs_perfect
         seq = "TTAGGG" * 30  # 180 bp
         runs = list(iter_kmer_runs_perfect(seq, 6, 150))
         assert len(runs) >= 1
@@ -213,26 +213,26 @@ class TestDetection:
         assert end - start == 180
 
     def test_perfect_detection_skips_N(self):
-        from telomerediff.engine import iter_kmer_runs_perfect
+        from teloscan.engine import iter_kmer_runs_perfect
         seq = "N" * 200
         runs = list(iter_kmer_runs_perfect(seq, 6, 150))
         assert len(runs) == 0
 
     def test_perfect_detection_min_run_filter(self):
-        from telomerediff.engine import iter_kmer_runs_perfect
+        from teloscan.engine import iter_kmer_runs_perfect
         seq = "TTAGGG" * 5  # 30 bp, below 150 threshold
         runs = list(iter_kmer_runs_perfect(seq, 6, 150))
         assert len(runs) == 0
 
     def test_fuzzy_detection(self):
-        from telomerediff.engine import iter_kmer_runs_fuzzy
+        from teloscan.engine import iter_kmer_runs_fuzzy
         # Introduce 1 mismatch in the middle
         seq = "TTAGGG" * 10 + "TTATGG" + "TTAGGG" * 15  # ~156 bp
         runs = list(iter_kmer_runs_fuzzy(seq, 6, "TTAGGG", 1, 150))
         assert len(runs) >= 1
 
     def test_detect_blocks_for_read(self):
-        from telomerediff.engine import detect_blocks_for_read
+        from teloscan.engine import detect_blocks_for_read
         seq = "TTAGGG" * 30
         blocks = detect_blocks_for_read("test_read", seq, [6], 150)
         assert len(blocks) >= 1
@@ -243,7 +243,7 @@ class TestDetection:
         assert b.entropy > 0
 
     def test_detect_blocks_strand_consistent(self):
-        from telomerediff.engine import detect_blocks_for_read
+        from teloscan.engine import detect_blocks_for_read
         seq_fwd = "TTAGGG" * 30
         seq_rev = "CCCTAA" * 30
         blocks_fwd = detect_blocks_for_read("fwd", seq_fwd, [6], 150)
@@ -255,7 +255,7 @@ class TestDetection:
         assert blocks_fwd[0].strand != blocks_rev[0].strand
 
     def test_merge_overlapping_blocks(self):
-        from telomerediff.engine import RepeatBlock, _merge_blocks
+        from teloscan.engine import RepeatBlock, _merge_blocks
         b1 = RepeatBlock("r1", 0, 100, 6, "AACCCT", "perfect", "+", 16, 100, 0.5, 1.5)
         b2 = RepeatBlock("r1", 80, 200, 6, "AACCCT", "fuzzy", "+", 20, 120, 0.4, 1.5)
         merged = _merge_blocks([b1, b2])
@@ -265,7 +265,7 @@ class TestDetection:
         assert merged[0].mode == "mixed"
 
     def test_block_to_bed_name(self):
-        from telomerediff.engine import block_to_bed_name
+        from teloscan.engine import block_to_bed_name
         assert block_to_bed_name("TTAGGG", 6) == "TELREP:TTAGGG:k6"
 
 
@@ -275,7 +275,7 @@ class TestDetection:
 
 class TestMultiprocessing:
     def test_chunk_records(self):
-        from telomerediff.engine import chunk_records
+        from teloscan.engine import chunk_records
         records = [("r1", "ACGT"), ("r2", "TGCA"), ("r3", "AAAA")]
         chunks = list(chunk_records(records, 2))
         assert len(chunks) == 2
@@ -283,24 +283,24 @@ class TestMultiprocessing:
         assert len(chunks[1]) == 1
 
     def test_pass1_single_thread(self):
-        from telomerediff.engine import run_telomerediff_pass1
+        from teloscan.engine import run_teloscan_pass1
         seq = "TTAGGG" * 30
         records = [("r1", seq)]
-        result = run_telomerediff_pass1(records, [6], 150, threads=1, chunk_size=100)
+        result = run_teloscan_pass1(records, [6], 150, threads=1, chunk_size=100)
         assert 6 in result
         assert len(result[6]) > 0
 
     def test_pass2_single_thread(self):
-        from telomerediff.engine import run_telomerediff_pass2
+        from teloscan.engine import run_teloscan_pass2
         seq = "TTAGGG" * 30
         records = [("r1", seq)]
-        batches = list(run_telomerediff_pass2(records, [6], 150, None, 1, threads=1, chunk_size=100))
+        batches = list(run_teloscan_pass2(records, [6], 150, None, 1, threads=1, chunk_size=100))
         assert len(batches) >= 1
         total_blocks = sum(len(b) for b in batches)
         assert total_blocks >= 1
 
     def test_summarize_blocks_incremental(self):
-        from telomerediff.engine import RepeatBlock, summarize_blocks_incremental
+        from teloscan.engine import RepeatBlock, summarize_blocks_incremental
         from collections import Counter
         blocks = [
             RepeatBlock("r1", 0, 180, 6, "AACCCT", "perfect", "+", 30, 180, 0.8, 1.5),
@@ -324,7 +324,7 @@ class TestMultiprocessing:
 class TestVisualization:
     @pytest.fixture
     def sample_blocks(self):
-        from telomerediff.engine import RepeatBlock
+        from teloscan.engine import RepeatBlock
         return [
             RepeatBlock("r1", 0, 180, 6, "AACCCT", "perfect", "+", 30, 180, 0.8, 1.5),
             RepeatBlock("r1", 500, 700, 6, "AACCCT", "fuzzy", "-", 33, 200, 0.6, 1.5),
@@ -333,14 +333,14 @@ class TestVisualization:
 
     def test_plot_length_distribution(self, sample_blocks):
         pytest.importorskip("matplotlib")
-        from telomerediff.visualize import plot_length_distribution
+        from teloscan.visualize import plot_length_distribution
         b64 = plot_length_distribution(sample_blocks)
         assert b64 is not None
         assert len(b64) > 100
 
     def test_plot_motif_abundance(self):
         pytest.importorskip("matplotlib")
-        from telomerediff.visualize import plot_motif_abundance
+        from teloscan.visualize import plot_motif_abundance
         from collections import Counter
         bp = Counter({"AACCCT": 500, "AACCCTA": 300})
         b64 = plot_motif_abundance(bp)
@@ -348,19 +348,19 @@ class TestVisualization:
 
     def test_plot_per_read_heatmap(self, sample_blocks):
         pytest.importorskip("matplotlib")
-        from telomerediff.visualize import plot_per_read_heatmap
+        from teloscan.visualize import plot_per_read_heatmap
         b64 = plot_per_read_heatmap(sample_blocks)
         assert b64 is not None
 
     def test_plot_strand_distribution(self, sample_blocks):
         pytest.importorskip("matplotlib")
-        from telomerediff.visualize import plot_strand_distribution
+        from teloscan.visualize import plot_strand_distribution
         b64 = plot_strand_distribution(sample_blocks)
         assert b64 is not None
 
     def test_plot_save_to_file(self, sample_blocks):
         pytest.importorskip("matplotlib")
-        from telomerediff.visualize import plot_length_distribution
+        from teloscan.visualize import plot_length_distribution
         with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
             plot_length_distribution(sample_blocks, output_path=f.name)
             assert os.path.getsize(f.name) > 0
@@ -373,8 +373,8 @@ class TestVisualization:
 
 class TestReport:
     def test_generate_html_report(self):
-        from telomerediff.engine import RepeatBlock
-        from telomerediff.report import generate_html_report
+        from teloscan.engine import RepeatBlock
+        from teloscan.report import generate_html_report
         from collections import Counter
         blocks = [
             RepeatBlock("r1", 0, 180, 6, "AACCCT", "perfect", "+", 30, 180, 0.8, 1.5),
@@ -383,7 +383,7 @@ class TestReport:
         runs = Counter({"AACCCT": 1})
         by_k = {6: Counter({"AACCCT": 1})}
         html = generate_html_report(blocks, total_bp, runs, by_k, input_file="test.fastq")
-        assert "telomerediff Report" in html
+        assert "TeloScan Report" in html
         assert "AACCCT" in html
         assert "test.fastq" in html
         assert "<table>" in html
@@ -395,8 +395,8 @@ class TestReport:
 
 class TestCLIOutputFormats:
     def test_write_gff3(self):
-        from telomerediff.engine import RepeatBlock
-        from telomerediff.cli import _write_gff3
+        from teloscan.engine import RepeatBlock
+        from teloscan.cli import _write_gff3
         blocks = [
             RepeatBlock("r1", 0, 180, 6, "AACCCT", "perfect", "+", 30, 180, 0.8, 1.5),
         ]
@@ -406,13 +406,13 @@ class TestCLIOutputFormats:
             content = fh.read()
         os.unlink(f.name)
         assert "##gff-version 3" in content
-        assert "telomerediff" in content
+        assert "teloscan" in content
         assert "repeat_region" in content
         assert "canonical=AACCCT" in content
 
     def test_write_vcf(self):
-        from telomerediff.engine import RepeatBlock
-        from telomerediff.cli import _write_vcf
+        from teloscan.engine import RepeatBlock
+        from teloscan.cli import _write_vcf
         blocks = [
             RepeatBlock("r1", 0, 180, 6, "AACCCT", "perfect", "+", 30, 180, 0.8, 1.5),
         ]
@@ -433,11 +433,11 @@ class TestCLIOutputFormats:
 class TestIntegration:
     def test_full_pipeline_sample_fastq(self):
         """End-to-end test with sample FASTQ data."""
-        from telomerediff.io import read_fasta_fastq
-        from telomerediff.repeats import parse_k
-        from telomerediff.engine import (
-            run_telomerediff_pass1,
-            run_telomerediff_pass2,
+        from teloscan.io import read_fasta_fastq
+        from teloscan.repeats import parse_k
+        from teloscan.engine import (
+            run_teloscan_pass1,
+            run_teloscan_pass2,
             summarize_blocks_incremental,
         )
         from collections import Counter
@@ -447,7 +447,7 @@ class TestIntegration:
         assert len(records) == 5
 
         # Pass 1
-        motif_counts = run_telomerediff_pass1(records, k_values, 150, threads=1, chunk_size=100)
+        motif_counts = run_teloscan_pass1(records, k_values, 150, threads=1, chunk_size=100)
         assert 6 in motif_counts
 
         # Pass 2
@@ -456,7 +456,7 @@ class TestIntegration:
         by_k = {}
         by_strand = {}
         all_blocks = []
-        for batch in run_telomerediff_pass2(records, k_values, 150, None, 1, threads=1, chunk_size=100):
+        for batch in run_teloscan_pass2(records, k_values, 150, None, 1, threads=1, chunk_size=100):
             all_blocks.extend(batch)
             summarize_blocks_incremental(batch, total_bp, runs, by_k, by_strand)
 
@@ -473,14 +473,14 @@ class TestIntegration:
 class TestFileHandleClosure:
     def test_file_handle_closed_after_iteration(self):
         """Verify file handles are properly closed after reading."""
-        from telomerediff.io import read_fasta_fastq
+        from teloscan.io import read_fasta_fastq
         # Just fully consume the iterator — should not leave handles open
         records = list(read_fasta_fastq(SAMPLE_FASTQ))
         assert len(records) == 5
 
     def test_file_handle_closed_on_error(self):
         """File handle should close even on parse error."""
-        from telomerediff.io import read_fasta_fastq
+        from teloscan.io import read_fasta_fastq
         with tempfile.NamedTemporaryFile(mode="w", suffix=".fastq", delete=False) as f:
             f.write("NOT_A_VALID_HEADER\nACGT\n+\nIIII\n")
             f.flush()
@@ -492,7 +492,7 @@ class TestFileHandleClosure:
 class TestStdinBuffering:
     def test_buffer_records(self):
         """buffer_records should load all records into a list."""
-        from telomerediff.io import buffer_records
+        from teloscan.io import buffer_records
         records = buffer_records(SAMPLE_FASTQ)
         assert isinstance(records, list)
         assert len(records) == 5
@@ -505,7 +505,7 @@ class TestStdinBuffering:
 class TestFormatHint:
     def test_format_hint_fasta(self):
         """format_hint should override auto-detection."""
-        from telomerediff.io import read_fasta_fastq
+        from teloscan.io import read_fasta_fastq
         with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
             f.write(">s1\nACGTACGT\n")
             f.flush()
@@ -517,7 +517,7 @@ class TestFormatHint:
 
 class TestFieldSanitization:
     def test_sanitize_field(self):
-        from telomerediff.cli import _sanitize_field
+        from teloscan.cli import _sanitize_field
         assert _sanitize_field("normal_read") == "normal_read"
         assert "\t" not in _sanitize_field("read\twith\ttabs")
         assert "\n" not in _sanitize_field("read\nwith\nnewlines")
@@ -525,8 +525,8 @@ class TestFieldSanitization:
 
     def test_gff3_special_chars(self):
         """GFF3 output should handle special characters in read IDs."""
-        from telomerediff.engine import RepeatBlock
-        from telomerediff.cli import _write_gff3
+        from teloscan.engine import RepeatBlock
+        from teloscan.cli import _write_gff3
         blocks = [
             RepeatBlock("read\twith\ttab", 0, 180, 6, "AACCCT", "perfect", "+", 30, 180, 0.8, 1.5),
         ]
@@ -545,8 +545,8 @@ class TestFieldSanitization:
 class TestHTMLEscaping:
     def test_xss_prevention(self):
         """HTML report should escape potentially dangerous input."""
-        from telomerediff.engine import RepeatBlock
-        from telomerediff.report import generate_html_report
+        from teloscan.engine import RepeatBlock
+        from teloscan.report import generate_html_report
         from collections import Counter
         xss_read = '<script>alert("xss")</script>'
         blocks = [
@@ -562,10 +562,10 @@ class TestHTMLEscaping:
 
 class TestArgumentValidation:
     def test_validate_args_negative_min_run(self):
-        from telomerediff.cli import _validate_args
+        from teloscan.cli import _validate_args
         import argparse
         args = argparse.Namespace(
-            input=SAMPLE_FASTQ, min_run_bp=-1, top_motifs_per_k=10,
+            input=SAMPLE_FASTQ, k="6", min_run_bp=-1, top_motifs_per_k=10,
             max_mismatch=1, threads=1, chunk_size=2000, min_quality=None,
             out_per_read="/tmp/test.tsv", out_bed="/tmp/test.bed",
             out_summary="/tmp/test.summary.tsv", out_gff3=None,
@@ -575,10 +575,10 @@ class TestArgumentValidation:
             _validate_args(args)
 
     def test_validate_args_missing_input(self):
-        from telomerediff.cli import _validate_args
+        from teloscan.cli import _validate_args
         import argparse
         args = argparse.Namespace(
-            input="/nonexistent/file.fastq", min_run_bp=150, top_motifs_per_k=10,
+            input="/nonexistent/file.fastq", k="6", min_run_bp=150, top_motifs_per_k=10,
             max_mismatch=1, threads=1, chunk_size=2000, min_quality=None,
             out_per_read="/tmp/test.tsv", out_bed="/tmp/test.bed",
             out_summary="/tmp/test.summary.tsv", out_gff3=None,
@@ -588,11 +588,45 @@ class TestArgumentValidation:
             _validate_args(args)
 
 
+class TestKmerValidationWarnings:
+    def test_large_k_warning(self, caplog):
+        """Warn when k > 50."""
+        import logging
+        from teloscan.cli import _validate_args
+        import argparse
+        args = argparse.Namespace(
+            input=SAMPLE_FASTQ, k="55", min_run_bp=150, top_motifs_per_k=10,
+            max_mismatch=1, threads=1, chunk_size=2000, min_quality=None,
+            out_per_read="/tmp/test.tsv", out_bed="/tmp/test.bed",
+            out_summary="/tmp/test.summary.tsv", out_gff3=None,
+            out_vcf=None, out_html=None,
+        )
+        with caplog.at_level(logging.WARNING, logger="teloscan"):
+            _validate_args(args)
+        assert "Large k-mer size" in caplog.text
+
+    def test_min_run_bp_too_small_warning(self, caplog):
+        """Warn when min_run_bp < 2 * max_k."""
+        import logging
+        from teloscan.cli import _validate_args
+        import argparse
+        args = argparse.Namespace(
+            input=SAMPLE_FASTQ, k="6", min_run_bp=10, top_motifs_per_k=10,
+            max_mismatch=1, threads=1, chunk_size=2000, min_quality=None,
+            out_per_read="/tmp/test.tsv", out_bed="/tmp/test.bed",
+            out_summary="/tmp/test.summary.tsv", out_gff3=None,
+            out_vcf=None, out_html=None,
+        )
+        with caplog.at_level(logging.WARNING, logger="teloscan"):
+            _validate_args(args)
+        assert "less than 2" in caplog.text
+
+
 class TestPublicAPI:
     def test_imports_from_package(self):
         """Key classes/functions should be importable from the top-level package."""
-        from telomerediff import RepeatBlock, canonical_repeat_unit, detect_blocks_for_read
-        from telomerediff import read_fasta_fastq, parse_k
+        from teloscan import RepeatBlock, canonical_repeat_unit, detect_blocks_for_read
+        from teloscan import read_fasta_fastq, parse_k
         assert RepeatBlock is not None
         assert callable(canonical_repeat_unit)
         assert callable(detect_blocks_for_read)

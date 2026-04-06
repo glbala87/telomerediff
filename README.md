@@ -1,9 +1,9 @@
-# telomerediff
+# TeloScan
 
-**telomerediff** is an open-source Python tool for **de novo discovery of telomeric repeat blocks**
+**TeloScan** is an open-source Python tool for **de novo discovery of telomeric repeat blocks**
 directly from **long-read sequencing data (Oxford Nanopore / PacBio)** when the telomeric motif is unknown.
 
-Unlike reference-based approaches, telomerediff operates in an **alignment-free** manner, enabling
+Unlike reference-based approaches, TeloScan operates in an **alignment-free** manner, enabling
 robust telomere discovery in non-model organisms and incomplete genome assemblies.
 
 ---
@@ -19,15 +19,15 @@ robust telomere discovery in non-model organisms and incomplete genome assemblie
 - **Quality filtering** — filter reads by average base quality
 - **Multi-threaded** processing with configurable thread count and chunk size
 - **Rich output formats** — TSV, BED, GFF3, VCF, self-contained HTML report, PNG plots
-- **Library API** — use telomerediff programmatically in Python scripts
+- **Library API** — use TeloScan programmatically in Python scripts
 
 ---
 
 ## Installation
 
 ```bash
-git clone https://github.com/glbala87/telomerediff.git
-cd telomerediff
+git clone https://github.com/glbala87/TeloScan.git
+cd TeloScan
 pip install -e .
 ```
 
@@ -56,13 +56,13 @@ pip install -e ".[dev]"
 
 ```bash
 # Basic run
-telomerediff -i reads.fastq.gz
+teloscan -i reads.fastq.gz
 
 # With error-tolerant refinement (recommended for ONT)
-telomerediff -i reads.fastq.gz --refine
+teloscan -i reads.fastq.gz --refine
 
 # Full analysis with all outputs
-telomerediff -i reads.fastq.gz \
+teloscan -i reads.fastq.gz \
   --refine \
   --out-html report.html \
   --out-gff3 telomeres.gff3 \
@@ -73,7 +73,7 @@ telomerediff -i reads.fastq.gz \
 ### Try with sample data
 
 ```bash
-telomerediff -i tests/data/sample.fastq -k 6-7 --refine --out-html report.html
+teloscan -i tests/data/sample.fastq -k 6-7 --refine --out-html report.html
 ```
 
 ---
@@ -81,7 +81,7 @@ telomerediff -i tests/data/sample.fastq -k 6-7 --refine --out-html report.html
 ## Usage
 
 ```
-telomerediff -i <input> [options]
+teloscan -i <input> [options]
 ```
 
 ### Input options
@@ -116,9 +116,9 @@ telomerediff -i <input> [options]
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--out-per-read` | `telomerediff.per_read.tsv` | Per-read blocks TSV |
-| `--out-bed` | `telomerediff.blocks.bed` | BED format coordinates |
-| `--out-summary` | `telomerediff.summary.tsv` | Motif-level summary TSV |
+| `--out-per-read` | `teloscan.per_read.tsv` | Per-read blocks TSV |
+| `--out-bed` | `teloscan.blocks.bed` | BED format coordinates |
+| `--out-summary` | `teloscan.summary.tsv` | Motif-level summary TSV |
 | `--out-gff3` | *(off)* | GFF3 annotation file |
 | `--out-vcf` | *(off)* | VCF annotation file |
 | `--out-html` | *(off)* | Self-contained HTML report with embedded plots |
@@ -181,7 +181,7 @@ Self-contained HTML file (open in any browser) with:
 
 ## How It Works
 
-telomerediff uses a **two-pass algorithm**:
+TeloScan uses a **two-pass algorithm**:
 
 **Pass 1 — Motif Discovery:**
 Scans all reads for in-frame consecutive identical k-mers. Counts canonical motif occurrences across all reads to identify the most abundant telomeric repeat candidates.
@@ -197,7 +197,7 @@ Repeat motifs are normalized by selecting the lexicographically smallest string 
 ## Python Library API
 
 ```python
-from telomerediff import read_fasta_fastq, parse_k, detect_blocks_for_read
+from teloscan import read_fasta_fastq, parse_k, detect_blocks_for_read
 
 for read_id, seq in read_fasta_fastq("reads.fastq.gz"):
     blocks = detect_blocks_for_read(
@@ -225,35 +225,38 @@ for read_id, seq in read_fasta_fastq("reads.fastq.gz"):
 
 ### Stdin piping
 
+> **Note:** Stdin input requires buffering all records into memory for the two-pass algorithm.
+> For large datasets, prefer passing a file path instead of piping through stdin.
+
 ```bash
-cat reads.fastq | telomerediff -i -
-cat sequences.fasta | telomerediff -i - --format fasta
+cat reads.fastq | teloscan -i -
+cat sequences.fasta | teloscan -i - --format fasta
 ```
 
 ### Specific k-mer sizes
 
 ```bash
 # Human telomere (TTAGGG, k=6)
-telomerediff -i reads.fastq.gz -k 6 --refine
+teloscan -i reads.fastq.gz -k 6 --refine
 
 # Arabidopsis (TTTAGGG, k=7)
-telomerediff -i reads.fastq.gz -k 7 --refine
+teloscan -i reads.fastq.gz -k 7 --refine
 
 # Scan a range
-telomerediff -i reads.fastq.gz -k 4-15 --refine
+teloscan -i reads.fastq.gz -k 4-15 --refine
 ```
 
 ### BAM input
 
 ```bash
-telomerediff -i aligned.bam -k 6 --refine
-telomerediff -i aligned.cram --reference ref.fa -k 6
+teloscan -i aligned.bam -k 6 --refine
+teloscan -i aligned.cram --reference ref.fa -k 6
 ```
 
 ### Quality filtering
 
 ```bash
-telomerediff -i reads.fastq.gz --min-quality 10 --refine
+teloscan -i reads.fastq.gz --min-quality 10 --refine
 ```
 
 ---
@@ -261,8 +264,8 @@ telomerediff -i reads.fastq.gz --min-quality 10 --refine
 ## Project Structure
 
 ```
-telomerediff/
-├── src/telomerediff/
+teloscan/
+├── src/teloscan/
 │   ├── __init__.py       # Package exports and version
 │   ├── cli.py            # Command-line interface
 │   ├── engine.py         # Core detection algorithms
@@ -273,11 +276,12 @@ telomerediff/
 ├── tests/
 │   ├── data/
 │   │   └── sample.fastq  # Bundled sample data (5 reads)
-│   └── test_basic.py     # 57 tests covering all modules
+│   └── test_basic.py     # 59 tests covering all modules
 ├── .github/workflows/
 │   └── ci.yml            # CI: Python 3.9–3.12 matrix
 ├── pyproject.toml
 ├── CITATION.cff
+├── CHANGELOG.md
 └── LICENSE
 ```
 
@@ -292,6 +296,15 @@ pytest -v
 
 ---
 
+## Notes & Limitations
+
+- **Stdin buffers into memory:** The two-pass algorithm requires reading data twice. When reading from stdin, all records are buffered in memory. For large datasets (>1M reads), pass a file path instead.
+- **Single-base repeat confidence:** Motifs with zero Shannon entropy (e.g., `AAAAAA`) will receive a confidence score of 0, since the entropy component is multiplicative. This is by design — low-complexity repeats are less likely to be true telomeric motifs.
+- **BAM/CRAM filtering:** Secondary and supplementary alignments are silently skipped. Only primary alignments are processed.
+- **Large k values:** k-mer sizes above ~50 rarely match biological telomeric repeats. The tool will warn if large k values are specified.
+
+---
+
 ## Scientific Rationale
 
 Telomeric regions are composed of tandem repeats and are often poorly represented in reference
@@ -303,11 +316,11 @@ advantageous — especially for non-model organisms where the telomeric motif ma
 
 ## Citation
 
-If you use telomerediff in your research, please cite:
+If you use TeloScan in your research, please cite:
 
 ```
-Gattu Linga, B.S. (2025). telomerediff: De novo discovery of telomeric repeat blocks
-from long-read sequencing. https://github.com/glbala87/telomerediff
+Gattu Linga, B.S. (2025). TeloScan: De novo discovery of telomeric repeat blocks
+from long-read sequencing. https://github.com/glbala87/TeloScan
 ```
 
 ---

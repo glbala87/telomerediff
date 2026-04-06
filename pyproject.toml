@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "telomerediff"
+name = "teloscan"
 version = "0.2.1"
 description = "De novo discovery of telomeric repeat blocks from long-read sequencing (ONT / PacBio)"
 readme = "README.md"
@@ -24,7 +24,7 @@ all = ["tqdm>=4.60", "matplotlib>=3.5", "pysam>=0.19"]
 dev = ["pytest>=7.0", "tqdm>=4.60", "matplotlib>=3.5"]
 
 [project.scripts]
-telomerediff = "telomerediff.cli:main"
+teloscan = "teloscan.cli:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

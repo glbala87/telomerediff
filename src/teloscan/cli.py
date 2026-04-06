@@ -9,26 +9,26 @@ import multiprocessing as mp
 from collections import Counter
 from typing import Dict, Iterator, List, Tuple
 
-from telomerediff import __version__
-from telomerediff.io import read_fasta_fastq, buffer_records
-from telomerediff.repeats import parse_k
-from telomerediff.engine import (
+from teloscan import __version__
+from teloscan.io import read_fasta_fastq, buffer_records
+from teloscan.repeats import parse_k
+from teloscan.engine import (
     RepeatBlock,
-    run_telomerediff_pass1,
-    run_telomerediff_pass2,
+    run_teloscan_pass1,
+    run_teloscan_pass2,
     summarize_blocks_incremental,
     block_to_bed_name,
 )
 
-logger = logging.getLogger("telomerediff")
+logger = logging.getLogger("teloscan")
 
 
 def _setup_logging(verbose: bool = False) -> None:
-    """Configure logging for telomerediff."""
+    """Configure logging for TeloScan."""
     level = logging.DEBUG if verbose else logging.INFO
     handler = logging.StreamHandler(sys.stderr)
     handler.setFormatter(logging.Formatter("[%(levelname)s] %(message)s"))
-    root = logging.getLogger("telomerediff")
+    root = logging.getLogger("teloscan")
     root.setLevel(level)
     root.addHandler(handler)
 
@@ -62,7 +62,7 @@ def _write_gff3(blocks: List[RepeatBlock], path: str) -> None:
                 f"copies={b.copies};confidence={b.confidence:.4f};entropy={b.entropy:.4f}"
             )
             f.write(
-                f"{read_id}\ttelomerediff\trepeat_region\t{b.start + 1}\t{b.end}\t"
+                f"{read_id}\tteloscan\trepeat_region\t{b.start + 1}\t{b.end}\t"
                 f"{b.confidence:.4f}\t{b.strand}\t.\t{attrs}\n"
             )
 
@@ -109,6 +109,22 @@ def _validate_args(args: argparse.Namespace) -> None:
     if args.min_quality is not None and args.min_quality < 0:
         raise SystemExit("Error: --min-quality must be >= 0")
 
+    # Warn if k-mer sizes look unreasonable
+    k_values = parse_k(args.k)
+    max_k = max(k_values)
+    if max_k > 50:
+        logger.warning(
+            "Large k-mer size (%d) requested. Values above ~50 rarely match "
+            "biological telomeric repeats and may produce no results.", max_k
+        )
+    if args.min_run_bp < 2 * max_k:
+        logger.warning(
+            "--min-run-bp (%d) is less than 2 × largest k (%d). "
+            "At least 2 consecutive k-mer copies are required for detection, "
+            "so blocks shorter than %d bp at k=%d are impossible.",
+            args.min_run_bp, max_k, 2 * max_k, max_k,
+        )
+
     # Validate input exists
     if args.input != "-" and not os.path.isfile(args.input):
         raise SystemExit(f"Error: input file not found: {args.input}")
@@ -127,7 +143,7 @@ def _validate_args(args: argparse.Namespace) -> None:
 
 def main() -> None:
     ap = argparse.ArgumentParser(
-        prog="telomerediff",
+        prog="teloscan",
         description="Alignment-free de novo discovery of telomeric repeats from long-read sequencing (ONT / PacBio).",
     )
     ap.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
@@ -163,9 +179,9 @@ def main() -> None:
                     help="Enable debug logging")
 
     # Output paths
-    ap.add_argument("--out-per-read", default="telomerediff.per_read.tsv")
-    ap.add_argument("--out-bed", default="telomerediff.blocks.bed")
-    ap.add_argument("--out-summary", default="telomerediff.summary.tsv")
+    ap.add_argument("--out-per-read", default="teloscan.per_read.tsv")
+    ap.add_argument("--out-bed", default="teloscan.blocks.bed")
+    ap.add_argument("--out-summary", default="teloscan.summary.tsv")
     ap.add_argument("--out-gff3", default=None,
                     help="Output GFF3 file (optional)")
     ap.add_argument("--out-vcf", default=None,
@@ -207,7 +223,7 @@ def main() -> None:
         records_p1 = read_fasta_fastq(args.input, **io_kwargs)
     records_p1 = _wrap_progress(records_p1, "Pass 1", args.no_progress)
 
-    motif_counts_by_k = run_telomerediff_pass1(
+    motif_counts_by_k = run_teloscan_pass1(
         records=records_p1,
         k_values=k_values,
         min_run_bp=args.min_run_bp,
@@ -246,7 +262,7 @@ def main() -> None:
     with open(args.out_per_read, "w") as tsv, open(args.out_bed, "w") as bed:
         tsv.write("read\tstart\tend\tk\tcanonical\tmode\tstrand\tcopies\trun_bp\tconfidence\tentropy\n")
 
-        for block_batch in run_telomerediff_pass2(
+        for block_batch in run_teloscan_pass2(
             records=records_p2,
             k_values=k_values,
             min_run_bp=args.min_run_bp,
@@ -298,7 +314,7 @@ def main() -> None:
     plot_images: Dict[str, str] = {}
     if args.out_plots or args.out_html:
         try:
-            from telomerediff.visualize import (
+            from teloscan.visualize import (
                 plot_length_distribution,
                 plot_motif_abundance,
                 plot_per_read_heatmap,
@@ -332,7 +348,7 @@ def main() -> None:
 
     # Optional HTML report
     if args.out_html:
-        from telomerediff.report import generate_html_report
+        from teloscan.report import generate_html_report
         report_html = generate_html_report(
             blocks=all_blocks,
             total_bp_by_motif=total_bp_by_motif,

@@ -1,12 +1,12 @@
 cff-version: 1.2.0
-message: "If you use telomerediff in your research, please cite it."
-title: "telomerediff: Alignment-free de novo discovery of telomeric repeats from long-read sequencing"
+message: "If you use TeloScan in your research, please cite it."
+title: "TeloScan: Alignment-free de novo discovery of telomeric repeats from long-read sequencing"
 authors:
   - family-names: "Gattu Linga"
     given-names: "Bala Subramani"
-version: "0.1.0"
+version: "0.2.1"
 license: MIT
-repository-code: "https://github.com/glbala87/telomerediff"
+repository-code: "https://github.com/glbala87/TeloScan"
 keywords:
   - telomeres
   - long-read sequencing

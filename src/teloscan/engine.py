@@ -311,7 +311,7 @@ def _pass2_worker(args):
     return out_blocks
 
 
-def run_telomerediff_pass1(
+def run_teloscan_pass1(
     records: Iterable[Tuple[str, str]],
     k_values: List[int],
     min_run_bp: int,
@@ -338,7 +338,7 @@ def run_telomerediff_pass1(
     return motif_counts_by_k
 
 
-def run_telomerediff_pass2(
+def run_teloscan_pass2(
     records: Iterable[Tuple[str, str]],
     k_values: List[int],
     min_run_bp: int,

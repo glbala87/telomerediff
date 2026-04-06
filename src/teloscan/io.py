@@ -8,7 +8,7 @@ import os
 import sys
 from typing import IO, Iterator, List, Optional, Tuple
 
-logger = logging.getLogger("telomerediff")
+logger = logging.getLogger("teloscan")
 
 
 def _open_text(path: str) -> IO[str]:

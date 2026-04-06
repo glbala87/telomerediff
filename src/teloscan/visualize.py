@@ -1,4 +1,4 @@
-"""Visualization utilities for telomerediff results."""
+"""Visualization utilities for TeloScan results."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import base64
 from collections import Counter, defaultdict
 from typing import Dict, List, Optional
 
-from telomerediff.engine import RepeatBlock
+from teloscan.engine import RepeatBlock
 
 
 def _check_matplotlib():
